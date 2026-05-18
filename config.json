@@ -1,0 +1,39 @@
+{
+  "input": {
+    "source": "webcam",
+    "video_path": "Video Database\\Sub 03.avi",
+    "loop_file": true
+  },
+  "runtime": {
+    "fps": 30.0,
+    "warmup_seconds": 3.0,
+    "calibration_frames": 60
+  },
+  "thresholds": {
+    "ear_default": 0.23,
+    "ear_calibration_factor": 0.65,
+    "ear_min": 0.15,
+    "ear_max": 0.35,
+    "mar": 0.6,
+    "pitch": 20.0,
+    "head_yaw": 30.0,
+    "head_nod_frames": 30,
+    "blink_freq": 10,
+    "yawn_frames": 20,
+    "max_yawns_window": 3,
+    "gaze_move": 1.5
+  },
+  "windows": {
+    "perclos_seconds": 60.0,
+    "perclos_short_seconds": 5.0,
+    "yawn_window_seconds": 60.0,
+    "blink_window_seconds": 10.0
+  },
+  "alerts": {
+    "drowsy_cooldown_seconds": 5.0
+  },
+  "decision_engine": "fsm",
+  "enable_legacy_feature_overlay": false,
+  "display_window": true,
+  "log_every_n_frames": 100
+}

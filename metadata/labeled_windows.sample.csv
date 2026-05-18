@@ -1,0 +1,9 @@
+subject_id,session_id,video_id,window_start_sec,window_end_sec,frame_count,valid_face_ratio,mean_ear,min_ear,mean_mar,max_mar,perclos_60s,perclos_5s,max_eye_closed_duration_sec,blink_rate_per_min,yawn_count,head_drop_count,max_pitch_velocity,mean_fsm_evidence,max_fsm_evidence,fsm_state_mode,kss_score,kss_band,label_source
+SAMPLE01,session_a,alert_01,0,60,1500,1.0,0.31,0.25,0.22,0.34,0.08,0.05,0.20,14,0,0,0.12,0.10,0.20,ALERT,3,alert,synthetic_fixture
+SAMPLE01,session_a,sleepy_01,60,120,1500,1.0,0.16,0.10,0.72,0.91,0.55,0.70,3.20,4,2,1,2.10,0.80,0.95,DROWSY,8,sleepy,synthetic_fixture
+SAMPLE02,session_b,alert_02,0,60,1500,1.0,0.29,0.23,0.25,0.39,0.12,0.08,0.30,12,0,0,0.18,0.12,0.22,ALERT,4,alert,synthetic_fixture
+SAMPLE02,session_b,sleepy_02,60,120,1500,1.0,0.17,0.11,0.68,0.88,0.48,0.62,2.80,5,1,1,1.80,0.74,0.90,DROWSY,7,sleepy,synthetic_fixture
+SAMPLE03,session_c,alert_03,0,60,1500,1.0,0.32,0.26,0.20,0.31,0.06,0.04,0.10,15,0,0,0.10,0.08,0.18,ALERT,2,alert,synthetic_fixture
+SAMPLE03,session_c,sleepy_03,60,120,1500,1.0,0.15,0.09,0.75,0.95,0.62,0.76,3.50,3,3,2,2.40,0.86,0.97,CRITICAL,9,sleepy,synthetic_fixture
+SAMPLE04,session_d,alert_04,0,60,1500,1.0,0.28,0.22,0.28,0.42,0.18,0.10,0.40,10,0,0,0.22,0.18,0.30,SUSPICIOUS,5,caution,synthetic_fixture
+SAMPLE04,session_d,sleepy_04,60,120,1500,1.0,0.18,0.12,0.64,0.82,0.41,0.58,2.20,6,1,1,1.50,0.68,0.84,DROWSY,7,sleepy,synthetic_fixture

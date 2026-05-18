@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "sections": {
+    "train_advanced_model": {
+      "allow_unknown_keys": false,
+      "fields": {
+        "cew_dir": { "type": "string", "minLength": 1 },
+        "mrl_dir": { "type": "string", "minLength": 1 },
+        "eyes_yawn_dir": { "type": "string", "minLength": 1 },
+        "batch_size": { "type": "integer", "minimum": 1 },
+        "learning_rate": { "type": "number", "exclusiveMinimum": 0 },
+        "epochs": { "type": "integer", "minimum": 1 },
+        "val_split": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "num_workers": { "type": "integer", "minimum": 0 },
+        "output_model": { "type": "string", "minLength": 1 },
+        "seed": { "type": "integer" }
+      }
+    },
+    "train_model": {
+      "allow_unknown_keys": false,
+      "fields": {
+        "input_csv": { "type": "string", "minLength": 1 },
+        "has_header": { "type": "boolean" },
+        "test_size": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 },
+        "random_state": { "type": "integer" },
+        "n_estimators": { "type": "integer", "minimum": 1 },
+        "n_jobs": { "type": "integer" },
+        "output_model": { "type": "string", "minLength": 1 },
+        "output_scaler": { "type": "string", "minLength": 1 }
+      }
+    },
+    "train_data": {
+      "allow_unknown_keys": false,
+      "fields": {
+        "video_source": { "type": "string", "minLength": 1 },
+        "label": { "type": "integer", "enum": [0, 1] },
+        "csv_file": { "type": "string", "minLength": 1 },
+        "predictor_path": { "type": "string", "minLength": 1 },
+        "frame_width": { "type": "integer", "minimum": 1 },
+        "detector_upsamples": { "type": "integer", "minimum": 0 },
+        "show_window": { "type": "boolean" },
+        "quit_key": { "type": "string", "minLength": 1, "maxLength": 1 },
+        "write_header": { "type": "boolean" },
+        "overwrite": { "type": "boolean" }
+      }
+    },
+    "extract_video_frames": {
+      "allow_unknown_keys": false,
+      "fields": {
+        "video_dir": { "type": "string", "minLength": 1 },
+        "output_dir": { "type": "string", "minLength": 1 },
+        "glob": { "type": "string", "minLength": 1 },
+        "recursive": { "type": "boolean" },
+        "sample_fps": { "type": "number", "exclusiveMinimum": 0 },
+        "label_folder": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

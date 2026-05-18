@@ -1,0 +1,3 @@
+subject_id,session_id,video_id,window_start_sec,window_end_sec,frame_count,valid_face_ratio,mean_ear,min_ear,mean_mar,max_mar,perclos_60s,perclos_5s,max_eye_closed_duration_sec,blink_rate_per_min,yawn_count,head_drop_count,max_pitch_velocity,mean_fsm_evidence,max_fsm_evidence,fsm_state_mode
+SAMPLE01,session_a,video_alert,0,60,1500,1.0,0.31,0.25,0.22,0.34,0.08,0.05,0.20,14,0,0,0.12,0.10,0.20,ALERT
+SAMPLE02,session_a,video_sleepy,0,60,1500,1.0,0.16,0.10,0.72,0.91,0.55,0.70,3.20,4,2,1,2.10,0.80,0.95,DROWSY

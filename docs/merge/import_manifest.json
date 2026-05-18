@@ -1,0 +1,181 @@
+{
+  "merge_timestamp_local": "2026-04-18 07:32:01",
+  "source_folders": [
+    "DA1/drowsiness_detection-main",
+    "drowsiness_detection_bundle"
+  ],
+  "import_scope": "maximum_non_heavy",
+  "excluded_artifacts": [
+    "DA1/drowsiness_detection-main/Video Database/**",
+    "DA1/drowsiness_detection-main/extracted_video_frames/**",
+    "DA1/drowsiness_detection-main/.git/**",
+    "DA1/drowsiness_detection-main/venv/**"
+  ],
+  "summary": {
+    "copied": 5,
+    "verified": 12,
+    "skipped": 0,
+    "missing": 0,
+    "total_records": 17
+  },
+  "records": [
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/1.mp4_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/1.mp4_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "4e96049b82c0e2ff210973261c02e1314bf9f3bf52958e41b500731807f4be8f",
+      "sha256_target": "4e96049b82c0e2ff210973261c02e1314bf9f3bf52958e41b500731807f4be8f"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/2.mp4_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/2.mp4_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "8443b7026247841cd00991545b393eff0424cc9c036e0458f3611c4cc559e0c9",
+      "sha256_target": "8443b7026247841cd00991545b393eff0424cc9c036e0458f3611c4cc559e0c9"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/3.mp4_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/3.mp4_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "a876158398dfe12bf11a8f650673a78ec486c49c4b25d1896f7980e51fdb841a",
+      "sha256_target": "a876158398dfe12bf11a8f650673a78ec486c49c4b25d1896f7980e51fdb841a"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/4.MOV_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/4.MOV_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "6342de1511944e35082997588e8cec85ed711642b2f0073f28f03e41b3eb49d3",
+      "sha256_target": "6342de1511944e35082997588e8cec85ed711642b2f0073f28f03e41b3eb49d3"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/5.mp4_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/5.mp4_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "f7100c7dfc506adcb366d550acc8d3622f23223f752f89d8c05d2b673daf02bf",
+      "sha256_target": "f7100c7dfc506adcb366d550acc8d3622f23223f752f89d8c05d2b673daf02bf"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/6.MOV_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/6.MOV_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "6e380240ceef03e3e228255e9b03bdf5d81acae2eff93feee3876eb38c2156a1",
+      "sha256_target": "6e380240ceef03e3e228255e9b03bdf5d81acae2eff93feee3876eb38c2156a1"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/7.mp4_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/7.mp4_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "4f15b6cf844c77f0a4f42b7f7f34c71c809d57cd8d70e4c4f6dcb71a66131c3e",
+      "sha256_target": "4f15b6cf844c77f0a4f42b7f7f34c71c809d57cd8d70e4c4f6dcb71a66131c3e"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Video Database/Yawn/Labels/8.mp4_labels.csv",
+      "target": "tools/evaluation/metadata/yawn_labels/8.mp4_labels.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "241e9afa8e871b4c84b6decf7c0041bc9b7a6c09dd65e771a3f099675e90236f",
+      "sha256_target": "241e9afa8e871b4c84b6decf7c0041bc9b7a6c09dd65e771a3f099675e90236f"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/final_evaluation_report.csv",
+      "target": "tools/evaluation/metadata/reports/final_evaluation_report.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "376c1bee7aa0d4954ab9d9a45daea64b81c88d68913b9b1545b7f4f14da91880",
+      "sha256_target": "376c1bee7aa0d4954ab9d9a45daea64b81c88d68913b9b1545b7f4f14da91880"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/MAR_Result/mar_evaluation_report.csv",
+      "target": "tools/evaluation/metadata/reports/mar_evaluation_report.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "verified",
+      "sha256_source": "966888ee2986fcb15671d4c3965e50ce0b1fc290fc4cc9387afe4860504b0d3c",
+      "sha256_target": "966888ee2986fcb15671d4c3965e50ce0b1fc290fc4cc9387afe4860504b0d3c"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/MAR_Result/mar_result.csv",
+      "target": "tools/evaluation/metadata/mar_result/mar_result.csv",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "copied",
+      "sha256_source": "47ca50820af2090adf485dbb00a00edaa266a8f5548eeaf4dcf2ad4188fcb65b",
+      "sha256_target": "47ca50820af2090adf485dbb00a00edaa266a8f5548eeaf4dcf2ad4188fcb65b"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/MAR_Result/Book1.xlsx",
+      "target": "tools/evaluation/metadata/mar_result/Book1.xlsx",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "copied",
+      "sha256_source": "4fe4eac178481dd4b9a2139e29a4b6c92da0f3cdd76a0d83c5cc276350230e40",
+      "sha256_target": "4fe4eac178481dd4b9a2139e29a4b6c92da0f3cdd76a0d83c5cc276350230e40"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/MAR_Result/Code_Generated_Image.png",
+      "target": "tools/evaluation/metadata/mar_result/Code_Generated_Image.png",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "copied",
+      "sha256_source": "c1892383d53ecc550791120972573881e8bf7d5635ccdc0db37a4e593f2a0066",
+      "sha256_target": "c1892383d53ecc550791120972573881e8bf7d5635ccdc0db37a4e593f2a0066"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/MAR_Result/unnamed.png",
+      "target": "tools/evaluation/metadata/mar_result/unnamed.png",
+      "type": "metadata_copy",
+      "subsystem": "evaluation",
+      "status": "copied",
+      "sha256_source": "594f03fd3ced0fd46395146aecd6228e9a0fe87a373495836c063c854d100192",
+      "sha256_target": "594f03fd3ced0fd46395146aecd6228e9a0fe87a373495836c063c854d100192"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/eye_model.pth",
+      "target": "eye_model.pth",
+      "type": "model_copy",
+      "subsystem": "models",
+      "status": "copied",
+      "sha256_source": "bda9fb3f40779c1cdce0558e6ea4ed82d94274c4e17caa46388cdc1eabcfcb3e",
+      "sha256_target": "bda9fb3f40779c1cdce0558e6ea4ed82d94274c4e17caa46388cdc1eabcfcb3e"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Reference/OTSU_paper.pdf",
+      "target": "docs/reference/OTSU_paper.pdf",
+      "type": "reference_copy",
+      "subsystem": "docs",
+      "status": "verified",
+      "sha256_source": "98cea7fd3f9bed6eeba4f5da5ca4221eec435b2a4ec3f047e099bdc325cb23e3",
+      "sha256_target": "98cea7fd3f9bed6eeba4f5da5ca4221eec435b2a4ec3f047e099bdc325cb23e3"
+    },
+    {
+      "source": "DA1/drowsiness_detection-main/Reference/real-time-driver-drowsiness-detection-system-using-facial-5eb70f1r04.pdf",
+      "target": "docs/reference/real-time-driver-drowsiness-detection-system-using-facial-5eb70f1r04.pdf",
+      "type": "reference_copy",
+      "subsystem": "docs",
+      "status": "verified",
+      "sha256_source": "4f4dc8243baa33ed303b6402f30e543703b7df900f61bb8a33d13abf0b6fd23a",
+      "sha256_target": "4f4dc8243baa33ed303b6402f30e543703b7df900f61bb8a33d13abf0b6fd23a"
+    }
+  ],
+  "archive_policy": {
+    "status": "completed",
+    "destination_root": "D:\\drowsiness_detection-import-archive",
+    "archive_path": "D:\\drowsiness_detection-import-archive\\merge_20260418_015536"
+  }
+}

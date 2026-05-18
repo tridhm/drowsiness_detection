@@ -1,0 +1,379 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage{fontspec}
+\usepackage[vietnamese]{babel}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\setmonofont{Courier New}
+\defaultfontfeatures{Ligatures=TeX}
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{setspace}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{tabularx}
+\usepackage{xurl}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{titlesec}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\Urlmuskip=0mu plus 1mu
+\setstretch{1.3}
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+\emergencystretch=3em
+
+\title{\textbf{HỆ THỐNG GIÁM SÁT NGƯỜI LÁI DỰA TRÊN THỊ GIÁC MÁY TÍNH}\\[0.4em]
+\large Đồ án 1 theo hướng Driver Monitoring System (DMS)}
+\author{Biên soạn từ mã nguồn, tài liệu kiến trúc\\và kết quả kiểm toán khoa học của dự án}
+\date{Tháng 03 năm 2026}
+
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+
+\section*{Tóm tắt}
+Luận văn này trình bày một phân tích học thuật bám sát mã nguồn cho hệ thống giám sát người lái dựa trên thị giác máy tính nhằm phát hiện trạng thái buồn ngủ của tài xế. Nguồn tư liệu chính gồm các tệp suy luận thời gian thực \path{advanced_drowsiness_detection.py} và \path{drowsiness_detection_with_model.py}, các tệp huấn luyện \path{train_advanced_model.py} và \path{train_model.py}, tài liệu kiến trúc \path{docs/architecture/Architecture_Guide.md}, cùng các báo cáo kiểm toán khoa học của dự án. Mục tiêu của luận văn không chỉ là mô tả hệ thống hiện có, mà còn tái tổ chức lập luận theo một logic khoa học nhất quán: từ cơ sở y học của buồn ngủ, ánh xạ sinh lý học của các chỉ dấu quan sát được, trích xuất đặc trưng thị giác máy tính, kiến trúc học sâu phù hợp cho AI biên, đến cơ chế dung hợp học máy và chuẩn đánh giá theo định hướng công nghiệp.
+
+Về mặt lâm sàng, luận văn xem buồn ngủ là một trạng thái thần kinh -- hành vi, biểu hiện qua suy giảm cảnh giác duy trì, tăng phản ứng chậm, biến đổi hành vi nhìn, và giảm ổn định kiểm soát tư thế đầu -- cổ. Trong bối cảnh gán nhãn, thang Karolinska Sleepiness Scale (KSS) được xem là một mốc chủ quan quan trọng vì các tổng quan hiện đại cho thấy mức buồn ngủ chủ quan có tương quan đáng kể với chỉ dấu EEG và các kết cục hành vi như suy giảm hiệu năng quan sát, lệch làn, và tăng sai sót do mệt mỏi \cite{awareness2021,hussein2023}. Theo đó, các tín hiệu hình ảnh như đóng mắt kéo dài, PERCLOS, ngáp, và gật đầu không được diễn giải như chẩn đoán tuyệt đối, mà là các chỉ dấu quan sát được phản ánh một trạng thái sinh lý tiềm ẩn.
+
+Luận văn cũng chỉ ra rằng mã nguồn hiện tại đã có nhiều thành phần phù hợp về mặt nguyên lý của một hệ DMS hiện đại: chỉ số hình học tương đối như EAR và MAR; ước lượng tư thế đầu 3D bằng \path{cv2.solvePnP}; mạng tích chập đa nhiệm với ảnh cắt đầu vào \(64\times64\), \textit{shared backbone}, \textit{global average pooling} (GAP), và \textit{dropout} \(0.5\); cũng như nhánh dung hợp cổ điển bằng \path{RandomForestClassifier}. Tuy nhiên, các báo cáo kiểm toán cho thấy hệ thống vẫn mang tính nguyên mẫu do phụ thuộc đáng kể vào ngưỡng heuristic, gán nhãn nhị phân ở cấp độ video, và thiếu kiểm chứng ablation có hệ thống.
+
+Từ góc nhìn kỹ thuật ô tô, luận văn đề xuất nâng cấp hệ thống theo ba trục: (i) thay thế các luật cứng bằng dung hợp học máy có thể giải thích, với trọng số đặc trưng được lượng hóa bằng mức giảm Gini thay vì \path{if/else} thủ công; (ii) bổ sung \textit{finite state machine} (FSM) và cơ chế trễ \textit{hysteresis} để hạn chế dao động trạng thái cảnh báo; và (iii) chuẩn hóa đánh giá bằng \textit{confusion matrix}, nghiên cứu cắt bỏ, cùng đối sánh với các tài liệu Euro NCAP về giám sát người lái và bối cảnh thực hành của NHTSA \cite{euroncap_driver_engagement,euroncapsd201,euroncapsd202}. Kết luận chính là: mã nguồn hiện tại là một nguyên mẫu DMS có nền tảng kỹ thuật tốt, nhưng để đạt mức luận văn tốt nghiệp có giá trị ứng dụng cao, hệ thống cần được neo chặt hơn vào nhãn KSS đồng bộ theo thời gian, chuẩn hóa các hằng số thời lượng theo FPS thực tế, và xác thực đa tín hiệu theo quy trình đánh giá hiện đại.
+
+\newpage
+\section{Giới thiệu và cơ sở y khoa của buồn ngủ}
+\subsection{Buồn ngủ như một trạng thái thần kinh -- hành vi}
+Trong kỹ thuật an toàn ô tô, buồn ngủ của người lái không nên được hiểu như một cảm giác chủ quan đơn lẻ, mà là một trạng thái suy giảm chức năng thần kinh -- hành vi có khả năng làm giảm chất lượng quan sát môi trường, kéo dài thời gian phản ứng, làm bất ổn kiểm soát phương tiện, và gia tăng nguy cơ tai nạn. Các tổng quan hiện đại về phát hiện buồn ngủ của tài xế đều thống nhất rằng buồn ngủ biểu hiện đồng thời trên ba lớp thông tin: lớp sinh lý học thần kinh, lớp hành vi thị giác, và lớp hiệu năng nhiệm vụ lái \cite{hussein2023,review2022}.
+
+Về bản chất, trạng thái buồn ngủ không xuất hiện đột ngột như một nhãn nhị phân. Nó tiến triển dần từ mệt mỏi nhẹ sang suy giảm cảnh giác, rồi đến các sự kiện ngắn kiểu \textit{lapse}, và cuối cùng có thể chuyển thành các cơn ngủ vi mô (\textit{microsleep}). Vì vậy, một hệ thống DMS dựa trên camera cần được thiết kế để nhận diện quá trình chuyển trạng thái chứ không chỉ phát hiện một biểu hiện tĩnh tại ở một khung hình riêng lẻ.
+
+\subsection{KSS như mốc nhãn chủ quan gần với chân trị lâm sàng}
+Một vấn đề cốt lõi của mọi hệ phát hiện buồn ngủ là \textit{ground truth}. Trạng thái buồn ngủ là một biến tiềm ẩn, nên hệ thống không thể được huấn luyện nghiêm túc nếu nhãn chỉ là giả định chủ quan của người phát triển hoặc nhãn cứng gắn cho toàn bộ video. Tổng quan hệ thống về nhận biết buồn ngủ khi lái xe cho thấy thang Karolinska Sleepiness Scale (KSS) vẫn là công cụ chủ quan được dùng phổ biến để lượng hóa mức buồn ngủ trong bối cảnh giao thông, và giá trị của nó tăng lên khi được gắn với các phép đo khách quan khác như EEG, hiệu năng chú ý, và hành vi lái \cite{awareness2021,hussein2023}.
+
+Từ góc độ thiết kế dữ liệu, điều này có nghĩa là nhãn đúng không nên là \path{LABEL_TO_WRITE = 1} cho toàn bộ một video, như báo cáo kiểm toán của mã nguồn đã chỉ ra, mà phải là nhãn theo cửa sổ thời gian đồng bộ với KSS hoặc một giao thức đánh giá tương đương. Đây cũng là lý do vì sao các giao thức đánh giá người lái hiện đại của Euro NCAP đặt ngưỡng suy giảm chú ý và buồn ngủ theo logic trạng thái, thay vì chấp nhận một biểu hiện khuôn mặt đơn lẻ như bằng chứng đầy đủ \cite{euroncapsd201,euroncapsd202}.
+
+\subsection{Tương quan với EEG và suy giảm hiệu năng cảnh giác}
+Các tổng quan gần đây về phát hiện buồn ngủ bằng EEG khẳng định rằng khi chuyển từ trạng thái tỉnh táo sang buồn ngủ, phổ năng lượng EEG có xu hướng dịch chuyển từ vùng tần số cao gắn với tỉnh táo sang tăng hoạt động ở các dải \(\theta\) và \(\alpha\), đồng thời năng lực cảnh giác giảm rõ rệt \cite{hussein2023}. Tổng quan hệ thống về nhận thức chủ quan khi buồn ngủ trong lúc lái xe cũng cho thấy buồn ngủ chủ quan có tương quan đáng kể với chỉ dấu nhãn cầu và EEG, nhờ đó KSS có thể đóng vai trò cầu nối giữa cảm nhận chủ quan và tín hiệu khách quan \cite{awareness2021}.
+
+Do đó, trong luận văn này, buồn ngủ được mô hình hóa theo chuỗi suy luận:
+\[
+\begin{aligned}
+\text{Trạng thái sinh lý tiềm ẩn}
+&\rightarrow \text{biến đổi EEG / hiệu năng cảnh giác} \\
+&\rightarrow \text{biểu hiện thị giác quan sát được}.
+\end{aligned}
+\]
+Chuỗi suy luận này quan trọng về mặt khoa học vì nó ngăn hệ thống đưa ra các diễn giải quá mức: một cái ngáp không phải là chẩn đoán buồn ngủ; một cái chớp mắt không phải là một cơn ngủ vi mô; và một tư thế cúi đầu không phải bằng chứng tuyệt đối của ngủ gật. Chỉ khi những chỉ dấu đó kéo dài đủ lâu, lặp lại đủ nhiều, hoặc xuất hiện đồng thời với nhau, chúng mới tạo thành bằng chứng đáng tin cậy hơn cho suy giảm cảnh giác.
+
+\section{Bản đồ sinh lý học của các chỉ số buồn ngủ}
+\subsection{PVT lapse, ngủ vi mô và quy tắc nhắm mắt vượt 500 ms}
+Một trong những hằng số thời gian quan trọng trong nghiên cứu cảnh giác là khái niệm \textit{lapse} của bài kiểm tra Psychomotor Vigilance Task (PVT). Trong văn liệu hiện đại, \textit{lapse} thường được dùng để chỉ các phản ứng chậm phản ánh suy giảm chú ý duy trì; các tổng quan gần đây tiếp tục sử dụng khái niệm này như một chuẩn tham chiếu khi phân tích buồn ngủ và hiệu năng lái \cite{hussein2023,abe2023}. Đối với hệ DMS dùng camera, mã nguồn hiện tại quy đổi hiện tượng này thành logic \path{EAR_FRAMES = 15}, tức khoảng \(0.5\) giây nếu giả định \(30\,fps\). Báo cáo kiểm toán của dự án đã chỉ ra cả điểm hợp lý lẫn hạn chế của lựa chọn này: điểm hợp lý là nó cố gắng bám vào một hằng số thời gian có ý nghĩa cảnh giác; hạn chế là việc cố định theo số khung hình làm giảm ý nghĩa sinh lý khi tốc độ khung hình thay đổi.
+
+Do đó, cách diễn giải học thuật thận trọng hơn là:
+\[
+N_{\text{lapse}} = \left\lceil f_{\text{fps}} \cdot 0.5 \right\rceil,
+\]
+trong đó \(f_{\text{fps}}\) là tốc độ khung hình đo thực tế từ thiết bị. Nếu mắt được xác định là đóng liên tục lâu hơn \(500\,ms\), sự kiện này có thể được xem như một \textit{ocular lapse} theo nghĩa vận hành của hệ thống DMS, với mức rủi ro cao hơn một cái chớp mắt sinh lý thông thường. Trong khuôn khổ luận văn, ngưỡng \(>500\,ms\) vì vậy được xem là một \textit{ngưỡng vận hành} hợp lý để nối kết giữa PVT và biểu hiện nhắm mắt kéo dài trên camera, chứ không được khẳng định như một định nghĩa lâm sàng duy nhất của \textit{microsleep}.
+
+\subsection{PERCLOS như đại lượng tích lũy của suy giảm cảnh giác}
+Nếu đóng mắt kéo dài là một sự kiện điểm, thì PERCLOS là một đại lượng tích lũy theo cửa sổ thời gian. Bài tổng quan năm 2023 của Abe nhấn mạnh rằng PERCLOS vẫn là một trong những chỉ số được xác thực rộng rãi nhất cho phát hiện buồn ngủ thụ động, mặc dù cần chuẩn hóa định nghĩa và kết hợp thêm các chỉ dấu khác trong môi trường thực tế \cite{abe2023}. Về định nghĩa, nếu \(c_t \in \{0,1\}\) biểu diễn trạng thái mắt đóng ở mẫu thời gian \(t\), thì trên một cửa sổ \(T\) mẫu:
+\[
+\mathrm{PERCLOS} = \frac{1}{T}\sum_{t=1}^{T} c_t.
+\]
+
+Ý nghĩa sinh lý của PERCLOS nằm ở chỗ nó không phản ứng quá mức với một biến cố đơn lẻ, mà phản ánh tỷ lệ thời gian người lái ở trong trạng thái thị giác gần với suy giảm tỉnh táo. Trong thực hành DMS, cửa sổ tính PERCLOS thường được lựa chọn theo mục tiêu hệ thống và giao thức đánh giá; vì vậy luận văn không khẳng định một giá trị duy nhất là tối ưu cho mọi bối cảnh. Với mã nguồn hiện tại, việc sử dụng \path{eye_counter} để phát hiện đóng mắt liên tục mới chỉ chạm tới lớp sự kiện điểm; nếu bổ sung PERCLOS như một đặc trưng chính thức trong \path{train_model.py} hoặc trong lớp FSM, hệ thống sẽ tiến gần hơn tới cách đánh giá chuẩn mực trong nghiên cứu buồn ngủ.
+
+\subsection{Muscle atonia, gật đầu và suy giảm kiểm soát tư thế đầu -- cổ}
+Trong ngôn ngữ sinh lý học giấc ngủ, \textit{muscle atonia} là một khái niệm mạnh, thường gắn với giảm trương lực cơ rất sâu. Tuy nhiên, đối với hệ thống DMS monocular, điều hệ thống thật sự quan sát được không phải là \textit{atonia} theo nghĩa điện cơ, mà là sự suy giảm ngắn hạn của kiểm soát tư thế đầu -- cổ trong giai đoạn khởi phát buồn ngủ. Mã nguồn \path{advanced_drowsiness_detection.py} hiện sử dụng tư thế đầu tương đối \path{rel_pitch} và bộ đếm \path{head_nod_counter} để phát hiện gật gù. Về ý tưởng ứng dụng, đây là một chỉ dấu đúng hướng vì các nghiên cứu và tổng quan gần đây đều xem head pose là tín hiệu hành vi quan trọng trong hệ giám sát người lái \cite{review2022,euroncapsd202}.
+
+Tuy nhiên, về mặt cơ học sinh học, một góc \textit{pitch} tĩnh lớn không đủ để chứng minh buồn ngủ, vì nó có thể tương ứng với nhìn bảng đồng hồ, nhìn đường dốc, hay thay đổi vị trí camera. Đại lượng nên được nhấn mạnh là biến thiên theo thời gian:
+\[
+\dot{\theta}_{\text{pitch}}(t) \approx \frac{\theta_t - \theta_{t-1}}{\Delta t}.
+\]
+Một sự kiện gật đầu có ý nghĩa nên bao gồm ba pha: lệch nhanh khỏi đường cơ sở, đạt biên độ đủ lớn, và có xu hướng hồi phục. Vì vậy, trong luận văn này, ``sụt giảm góc pitch đột ngột'' được diễn giải như một chỉ dấu thực dụng của suy giảm kiểm soát cơ đầu -- cổ, chứ không phải bằng chứng trực tiếp của \textit{REM atonia}.
+
+\subsection{Fatigue onset và logic ngáp kéo dài trên 4 giây}
+Ngáp là một biểu hiện hành vi thường xuất hiện trong các hệ phát hiện buồn ngủ do có liên hệ với giảm hưng phấn và mệt mỏi. Tuy nhiên, lỗi thường gặp của các hệ thống nguyên mẫu là coi mọi mở miệng ngắn đều là một cái ngáp. Trong mã nguồn hiện tại, \path{MAR_THRESH} kết hợp với \path{YAWN_FRAMES = 20} tương đương xấp xỉ \(0.67\,s\) ở \(30\,fps\), điều mà báo cáo kiểm toán đã phê phán là quá ngắn để đại diện cho một chuỗi ngáp sinh lý hoàn chỉnh.
+
+Các công trình ứng dụng hiện đại về phát hiện mệt mỏi người lái bằng thị giác máy tính tiếp tục sử dụng ngáp, tư thế đầu và trạng thái mắt như bộ ba đặc trưng chính \cite{dong2022,review2022}. Trong khuôn khổ kỹ thuật của luận văn này, ngưỡng ``ngáp lớn hơn \(4\,s\)'' được trình bày như một lựa chọn bảo thủ nhằm tách \textit{fatigue onset} khỏi các hành vi mở miệng ngắn như nói chuyện, cười, hoặc nhiễu landmark. Theo đó:
+\[
+N_{\text{yawn-min}} = \left\lceil f_{\text{fps}} \cdot 4.0 \right\rceil.
+\]
+Lập luận ở đây không phải là mọi cái ngáp đều kéo dài chính xác \(4\,s\), mà là một sự kiện mở miệng vượt \(4\,s\) có tính chuyên biệt cao hơn đối với buồn ngủ so với các biến cố ngắn cỡ vài trăm mili giây. Vì vậy, trong thiết kế hệ thống, ngưỡng này nên được hiểu là một quy ước kỹ thuật nhằm giảm tỷ lệ dương tính giả và cần được kiểm chứng thêm bằng dữ liệu thực nghiệm.
+
+\section{Thị giác máy tính và trích xuất đặc trưng}
+\subsection{Tính bất biến theo tỷ lệ của các đặc trưng dạng tỷ số}
+Một nguyên lý quan trọng trong thị giác máy tính là nên ưu tiên các đặc trưng tương đối thay vì khoảng cách tuyệt đối theo pixel. Nếu mọi kích thước khuôn mặt trên ảnh cùng bị nhân với hệ số tỉ lệ \(s\), thì tỉ số của hai khoảng cách vẫn không đổi:
+\[
+\frac{s a}{s b} = \frac{a}{b}.
+\]
+Do đó, các chỉ số như EAR và MAR có khả năng bất biến tốt hơn trước thay đổi khoảng cách camera, kích cỡ khuôn mặt, và phép resize ảnh. Đây là cơ sở toán học khiến mã nguồn hiện tại chọn cách biểu diễn hợp lý hơn nhiều so với việc dùng trực tiếp chênh lệch pixel thô.
+
+\subsection{Eye Aspect Ratio (EAR)}
+Trong pha suy luận thời gian thực của mã nguồn, mỗi mắt được biểu diễn bởi sáu landmark. Chỉ số EAR được cài đặt theo công thức:
+\[
+\mathrm{EAR} = \frac{\lVert p_2 - p_6 \rVert + \lVert p_3 - p_5 \rVert}{2\lVert p_1 - p_4 \rVert}.
+\]
+Tử số đo độ mở theo phương thẳng đứng của mi mắt, còn mẫu số chuẩn hóa theo chiều rộng mắt. Khi mắt khép lại, tử số giảm mạnh và EAR giảm theo. Về mặt giải thích, EAR hấp dẫn vì nhẹ, minh bạch, ít tham số, và tính toán gần như tức thời. Trong \path{advanced_drowsiness_detection.py}, EAR còn được tính song song với phân loại CNN trạng thái mắt, tạo nên một cơ chế phối hợp giữa tín hiệu hình học và tín hiệu học sâu.
+
+Tuy nhiên, luận văn cũng nhấn mạnh hạn chế của EAR: đây là đại lượng hình học chứ không phải thước đo sinh lý trực tiếp. EAR thay đổi theo hình dạng mắt, góc quay khuôn mặt, chất lượng landmark, kính, và điều kiện chiếu sáng. Vì vậy, EAR chỉ nên được diễn giải như một chỉ dấu gián tiếp của độ mở mí mắt, tốt nhất là so với đường cơ sở của từng cá nhân hoặc kết hợp với mô hình học máy.
+
+\subsection{Mouth Aspect Ratio (MAR)}
+Mã nguồn tính MAR từ khoảng cách dọc và ngang của miệng:
+\[
+\mathrm{MAR} = \frac{\lVert m_3 - m_4 \rVert}{\lVert m_1 - m_2 \rVert}.
+\]
+Giống EAR, MAR chuẩn hóa độ mở dọc theo độ rộng ngang, từ đó giảm phụ thuộc vào scale tuyệt đối. Về mặt toán học, MAR là đặc trưng đúng đắn cho phát hiện mở miệng. Tuy nhiên, giống như EAR, MAR tự thân không đủ ý nghĩa lâm sàng nếu thiếu ngữ cảnh thời gian. Một giá trị MAR cao trong \(200\,ms\) có thể chỉ là một âm tiết phát âm; cùng giá trị đó nhưng kéo dài nhiều giây có thể là một chuỗi ngáp mệt mỏi.
+
+\subsection{PERCLOS như đặc trưng thời gian bậc cao}
+Khác với EAR và MAR là đặc trưng tức thời, PERCLOS là đặc trưng thời gian bậc cao. Nó đòi hỏi hệ thống duy trì hàng đợi hoặc bộ đệm các quyết định mắt mở/đóng theo cửa sổ trượt. Về mặt triển khai, PERCLOS đặc biệt phù hợp với hệ DMS vì chi phí tính toán thấp nhưng khả năng làm mượt diễn giải rất cao. Nếu một hệ thống chỉ dựa vào \path{eye_counter}, trạng thái sẽ rất nhạy với vài khung hình lỗi; nếu có thêm PERCLOS, hệ thống có thể nhận biết rằng người lái đang dành một tỷ lệ đáng kể của cửa sổ quan sát gần nhất trong trạng thái nhắm mắt kéo dài.
+
+\subsection{Mô hình nhân trắc 3D và solvePnP}
+Một phần quan trọng của mã nguồn là hàm \path{estimate_head_pose()}, trong đó sáu điểm ảnh 2D của khuôn mặt được gắn với một mô hình mặt 3D chuẩn tắc: chóp mũi, cằm, hai khóe mắt, và hai khóe miệng. Bài toán phối cảnh điểm -- điểm được giải bằng \path{cv2.solvePnP} để thu được vector quay \(\mathbf{r}\) và vector tịnh tiến \(\mathbf{t}\), sao cho:
+\[
+\mathbf{x}_i \sim \mathbf{K}\bigl(\mathbf{R}(\mathbf{r})\mathbf{X}_i + \mathbf{t}\bigr),
+\]
+trong đó \(\mathbf{X}_i\) là điểm 3D chuẩn, \(\mathbf{x}_i\) là điểm 2D quan sát được, và \(\mathbf{K}\) là ma trận nội tại của camera.
+
+Sau khi nhận được ma trận quay từ phép biến đổi Rodrigues, mã nguồn chuyển đổi sang các góc Euler xấp xỉ \textit{pitch}, \textit{yaw}, và \textit{roll}. Về bản chất, đây là một mô hình nhân trắc học 3D đơn giản nhưng phù hợp cho ứng dụng DMS vì không yêu cầu camera stereo. Điểm cần nhấn mạnh trong luận văn là: hệ thống chỉ ước lượng tư thế đầu ở mức chức năng, không phải phép đo chuyển động sinh học chính xác cấp y sinh; do đó nó phù hợp cho giám sát an toàn, nhưng không nên bị diễn giải như thiết bị đo động học lâm sàng.
+
+\subsection{Bộ lọc trung bình động hàm mũ (EMA)}
+Các tín hiệu landmark khuôn mặt luôn chứa nhiễu do rung camera, điều kiện sáng, che khuất và sai số nội tại của bộ phát hiện khuôn mặt. Để ổn định hóa, bộ lọc trung bình động hàm mũ là một lựa chọn kinh điển:
+\[
+\hat{x}_t = \alpha x_t + (1-\alpha)\hat{x}_{t-1}, \qquad 0 < \alpha < 1.
+\]
+Trong đó, \(x_t\) là tín hiệu thô, còn \(\hat{x}_t\) là tín hiệu đã làm mượt. EMA rất phù hợp cho EAR, MAR và góc đầu vì nó triệt bớt dao động cục bộ nhưng vẫn giữ được xu thế chậm của quá trình buồn ngủ. Báo cáo kiểm toán của dự án đã đề xuất EMA như một nâng cấp quan trọng để giảm kích hoạt giả. Trong một hệ DMS thực tế, EMA nên được đặt trước tầng FSM để quyết định trạng thái dựa trên tín hiệu ổn định hơn.
+
+\section{Kiến trúc học sâu và tối ưu hóa AI biên}
+\subsection{Ảnh cắt 64x64 và tối ưu FLOP cho suy luận biên}
+Trong cả \path{train_advanced_model.py} và \path{advanced_drowsiness_detection.py}, ảnh đầu vào cho bộ phân loại mắt được resize về \(64\times64\). Đây là một quyết định hợp lý dưới góc nhìn AI biên. Với mạng tích chập, chi phí tính toán gần đúng tỉ lệ với kích thước không gian của feature map. Nếu giảm cạnh ảnh từ \(128\) xuống \(64\), diện tích ảnh giảm bốn lần:
+\[
+\frac{128^2}{64^2} = 4.
+\]
+Điều này dẫn đến giảm đáng kể số phép nhân -- cộng và truy cập bộ nhớ, đặc biệt quan trọng khi triển khai trên thiết bị nhúng hoặc laptop không có GPU mạnh. Đối với bài toán cục bộ như phát hiện mắt mở/đóng, mất mát thông tin ngữ nghĩa do giảm độ phân giải không quá lớn vì ROI đã cô lập cấu trúc cần quan sát.
+
+\subsection{Học đa nhiệm với backbone dùng chung}
+Kiến trúc \path{AdvancedDrowsinessModel} sử dụng một bộ mã hóa chung (\textit{shared backbone}) gồm ba khối \path{Conv-BN-ReLU} và một \textit{bottleneck}, sau đó tách ra hai đầu ra: \path{eye_classifier} và \path{yawn_classifier}. Về nguyên lý, đây là một mô hình học đa nhiệm hợp lý vì các đặc trưng mức thấp như biên cạnh, bóng đổ, đường nét mí mắt hay cấu trúc da mặt có thể được chia sẻ giữa các nhiệm vụ liên quan đến mệt mỏi người lái. Các nghiên cứu ứng dụng gần đây cũng tiếp tục khai thác tư duy kết hợp nhiều đặc trưng khuôn mặt và nhiều đầu dự đoán để cải thiện độ chính xác tổng thể của hệ giám sát người lái \cite{dong2022,review2022}.
+
+Tuy nhiên, việc đọc mã nguồn cho thấy một điểm cần phê phán: nhánh \path{yawn_classifier} trong pha suy luận hiện thời chưa được nối với ROI miệng chuyên biệt, mà đang bị dùng trên tensor tạo từ ROI mắt trong hàm \path{predict_eyes_batch()}. Điều này cho thấy dự án đã có ý tưởng kiến trúc phù hợp, nhưng cách ghép nối trong triển khai hiện hành chưa hoàn toàn tương thích với cơ sở sinh lý học của bài toán. Vì vậy, luận văn phải phân biệt rõ giữa giá trị của ý tưởng đa nhiệm và giới hạn của phiên bản cài đặt hiện tại.
+
+\subsection{Gộp trung bình toàn cục (Global Average Pooling -- GAP)}
+Sau tầng \textit{bottleneck}, mô hình dùng \path{AdaptiveAvgPool2d(1)} để gom mỗi bản đồ đặc trưng thành một số vô hướng. Đây chính là \textit{Global Average Pooling} (GAP). So với cách \path{flatten} toàn bộ tensor không gian lớn rồi đưa vào tầng fully-connected cỡ lớn, GAP có ba ưu điểm quan trọng: giảm số tham số, tăng khả năng khái quát hóa, và khiến mạng bớt lệ thuộc vào vị trí tuyệt đối của đặc trưng trong ROI. Đối với suy luận trên ảnh mắt hoặc mặt cắt hẹp, GAP là lựa chọn hợp lý về mặt kiến trúc; tuy nhiên, để khẳng định nó là tối ưu cho bộ dữ liệu cụ thể của dự án, vẫn cần một nghiên cứu cắt bỏ so sánh trực tiếp với các lựa chọn khác.
+
+\subsection{Dropout 0.5 và chống đồng thích nghi}
+Cả mô hình đơn nhiệm lẫn đa nhiệm trong mã nguồn đều sử dụng \path{Dropout(0.5)} trước lớp tuyến tính cuối. Từ góc nhìn học máy, \textit{dropout} (kỹ thuật tắt ngẫu nhiên nơ-ron trong huấn luyện) làm giảm hiện tượng \textit{co-adaptation}, tức việc một nhóm nhỏ nơ-ron quá phụ thuộc lẫn nhau và vô tình học thuộc các thiên lệch không mong muốn của tập dữ liệu. Với dữ liệu mắt và khuôn mặt, nguồn thiên lệch có thể đến từ người dùng cụ thể, góc camera, ánh sáng nền, hoặc màu da. Tỷ lệ \(0.5\) là một giá trị kinh điển và hợp lý như một lựa chọn khởi đầu cho các đầu phân loại nhỏ của mạng hiện tại, nơi số lượng mẫu huấn luyện không quá lớn và nguy cơ quá khớp là hiện hữu. Dù vậy, lựa chọn này vẫn nên được hiểu là một quyết định kiến trúc có cơ sở, thay vì một kết quả đã được tối ưu hóa thực nghiệm cho bộ dữ liệu hiện tại.
+
+\subsection{Lệch miền dữ liệu BGR sang RGB}
+Một chi tiết nhỏ nhưng có ý nghĩa kỹ thuật lớn là xử lý lệch miền dữ liệu màu. OpenCV mặc định đọc ảnh theo thứ tự kênh BGR, trong khi PIL và hầu hết pipeline của \path{torchvision} giả định RGB. Nếu không chuyển đổi, mô hình sẽ phải suy luận trên phân phối màu khác với lúc huấn luyện. Mã nguồn hiện tại đã xử lý đúng bằng \path{cv2.cvtColor(..., cv2.COLOR_BGR2RGB)} trước khi tạo ảnh PIL. Đây là ví dụ điển hình cho một dạng \textit{domain shift} tiền xử lý: rất nhỏ về mặt cú pháp nhưng có thể làm suy giảm đáng kể độ chính xác suy luận nếu bị bỏ qua.
+
+\section{Dung hợp thuật toán và logic hệ thống}
+\subsection{Vì sao Random Forest tốt hơn luật cứng thủ công}
+Mã nguồn hiện tại sử dụng nhiều luật kiểu \path{if} với ngưỡng cố định cho mắt, miệng, chớp mắt, hướng nhìn và tư thế đầu. Dưới góc độ nguyên mẫu, điều này hữu ích vì dễ giải thích. Tuy nhiên, nó dẫn đến ba vấn đề lớn: trọng số của từng tín hiệu bị ẩn trong logic điều kiện; rất khó chứng minh vì sao một tín hiệu được ưu tiên hơn tín hiệu khác; và hệ thống dễ vỡ khi điều kiện camera hoặc người lái thay đổi.
+
+Trong \path{train_model.py}, dự án đã chứa một hướng đi tốt hơn: huấn luyện \path{RandomForestClassifier} trên tập đặc trưng bảng gồm \path{ear}, \path{mar}, \path{pitch}, \path{yaw}, \path{roll}. Đây là một bước chuyển quan trọng từ heuristic sang dung hợp học máy. Bài báo ứng dụng năm 2022 trên \textit{Applied Sciences} cũng minh họa trực tiếp hướng tiếp cận này: dùng Random Forest để quyết định trạng thái mệt mỏi dựa trên các đặc trưng khuôn mặt, đồng thời dùng CNN cho các hành vi liên quan khác \cite{dong2022}. Điều này khá gần với kiến trúc mà workspace hiện đang hướng tới.
+
+\subsection{Mức giảm Gini như bằng chứng định lượng cho trọng số đặc trưng}
+Trong cây quyết định, độ hỗn tạp của một nút thường được đo bởi Gini impurity:
+\[
+G = 1 - \sum_{k=1}^{K} p_k^2,
+\]
+trong đó \(p_k\) là xác suất mẫu tại nút thuộc lớp \(k\). Trong khuôn khổ Random Forest, ý tưởng sử dụng nhiều cây quyết định ngẫu nhiên hóa để tăng khả năng khái quát hóa đã được đặt nền tảng bởi Breiman \cite{breiman2001}. Với Random Forest, độ quan trọng của đặc trưng có thể được ước lượng từ tổng mức giảm impurity mà đặc trưng đó tạo ra trên toàn bộ rừng; phân tích của Louppe và cộng sự cho thấy cách diễn giải này có cơ sở lý thuyết rõ ràng nhưng cũng tồn tại các giới hạn cần được nhận thức đúng \cite{louppe2013}.
+
+Biểu thức tổng quát cho độ quan trọng của đặc trưng thứ \(j\) có thể viết:
+\[
+I_j = \frac{1}{T}\sum_{t=1}^{T}\sum_{n \in \mathcal{N}_{j,t}} \frac{N_n}{N}\,\Delta i_n,
+\]
+trong đó \(T\) là số cây, \(\mathcal{N}_{j,t}\) là tập nút của cây \(t\) sử dụng đặc trưng \(j\), \(N_n/N\) là trọng số theo số mẫu đến nút \(n\), và \(\Delta i_n\) là phần giảm impurity tại nút đó. So với việc hard-code rằng mắt chiếm \(60\%\), đầu chiếm \(20\%\) và ngáp chiếm \(20\%\), cách tiếp cận bằng giảm Gini đem lại một chứng cứ định lượng dựa trên dữ liệu huấn luyện thực tế. Tuy vậy, trong phân tích hậu nghiệm, luận văn cũng cần nhấn mạnh thêm tầm quan trọng của \textit{permutation importance} để tránh thiên lệch vốn có của impurity-based importance khi đánh giá mô hình hoàn chỉnh; trong triển khai thực tế, cách tính này cũng được hỗ trợ trực tiếp trong hệ sinh thái scikit-learn \cite{sklearnperm}.
+
+\subsection{Finite State Machine (FSM)}
+Ngay cả khi đã có đặc trưng tốt, hệ thống DMS cũng không nên nhảy trực tiếp từ một sự kiện đơn lẻ sang trạng thái cảnh báo nghiêm trọng. Một thiết kế hợp lý là dùng FSM nhiều mức, ví dụ:
+\[
+\text{TỈNH TÁO} \rightarrow \text{NGHI NGỜ} \rightarrow \text{BUỒN NGỦ} \rightarrow \text{NGUY KỊCH}.
+\]
+Mỗi chuyển trạng thái nên yêu cầu bằng chứng theo thời gian và bằng chứng đa kênh. Chẳng hạn, một lần mắt nhắm vượt \(500\,ms\) có thể đẩy hệ lên mức \textit{nghi ngờ}; PERCLOS tăng kèm một cú gật đầu xét theo động học sẽ đẩy lên mức \textit{buồn ngủ}; còn khi nhiều chỉ dấu duy trì liên tục mới chuyển sang mức \textit{nguy kịch}. So với kiến trúc OR giữa \path{model_says_closed} và \path{ear_says_closed} trong pha suy luận thời gian thực hiện tại, FSM đem lại khả năng giải thích, khả năng điều chỉnh và khả năng kiểm soát báo động giả tốt hơn đáng kể.
+
+\subsection{Hysteresis để chống rung trạng thái}
+Nếu hệ thống dùng cùng một ngưỡng cho cả lúc vào và lúc ra khỏi trạng thái cảnh báo, trạng thái rất dễ dao động khi tín hiệu lắc lư quanh ngưỡng. Cơ chế trễ \textit{hysteresis} giải quyết vấn đề này bằng hai ngưỡng khác nhau:
+\[
+\text{vào trạng thái rủi ro nếu } s_t > \tau_{\text{high}}, \qquad
+\text{thoát trạng thái rủi ro nếu } s_t < \tau_{\text{low}},
+\]
+trong đó \(\tau_{\text{low}} < \tau_{\text{high}}\). Ý nghĩa hệ thống của cơ chế này là: để vào trạng thái \textit{buồn ngủ}, cần bằng chứng mạnh; nhưng để rời trạng thái đó, cần một khoảng phục hồi ổn định chứ không phải chỉ một vài khung hình tốt. Đây là nguyên lý rất phù hợp với DMS, nơi trải nghiệm người lái bị ảnh hưởng mạnh nếu hệ thống nhấp nháy cảnh báo liên tục.
+
+\section{Đánh giá hệ thống và tiêu chuẩn công nghiệp}
+\subsection{Nghiên cứu cắt bỏ (ablation study)}
+Một luận văn kỹ thuật không thể chỉ liệt kê nhiều mô-đun rồi mặc nhiên cho rằng tất cả đều cần thiết. Công cụ khoa học đúng ở đây là \textit{nghiên cứu cắt bỏ}. Với hệ DMS của mã nguồn hiện tại, có thể xây dựng ít nhất năm cấu hình:
+\begin{enumerate}[label=\arabic*.]
+  \item mô hình đầy đủ: mắt + miệng + tư thế đầu + luật thời gian;
+  \item bỏ tư thế đầu;
+  \item bỏ đặc trưng ngáp;
+  \item bỏ nhánh CNN, chỉ giữ hình học;
+  \item chỉ dùng đặc trưng mắt làm đường cơ sở.
+\end{enumerate}
+Nếu khi bỏ một mô-đun mà hiệu năng giảm có ý nghĩa, mô-đun đó chứng minh được giá trị. Nếu hiệu năng không đổi, mô-đun nên bị xem xét lại để giảm độ phức tạp hệ thống.
+
+\subsection{Confusion matrix và ý nghĩa an toàn}
+Với hệ thống an toàn, chỉ số \textit{accuracy} là không đủ. \path{train_model.py} hiện đã in \path{classification_report}, đây là khởi đầu tốt nhưng chưa đủ cho suy luận thời gian thực. Công cụ tối thiểu cần có là \textit{confusion matrix}, cho phép phân tách:
+\begin{itemize}
+  \item dương tính đúng: phát hiện đúng người lái buồn ngủ;
+  \item âm tính đúng: không cảnh báo khi người lái tỉnh táo;
+  \item dương tính giả: cảnh báo nhầm gây khó chịu;
+  \item âm tính giả: bỏ sót trạng thái nguy hiểm.
+\end{itemize}
+Trong ứng dụng ô tô, âm tính giả thường có chi phí an toàn lớn hơn, nhưng dương tính giả kéo dài sẽ phá hủy niềm tin của người dùng. Vì vậy, hệ DMS phải tối ưu đồng thời cả độ nhạy và độ đặc hiệu, thay vì chỉ theo đuổi một chỉ số tổng quát.
+
+\subsection{Đối sánh với Euro NCAP và bối cảnh NHTSA}
+Các giao thức giám sát người lái mới của Euro NCAP cho giai đoạn 2025--2026 cho thấy một xu hướng rất rõ: giám sát trực tiếp người lái bằng mắt, đầu và các dấu hiệu trạng thái sẽ trở thành thành phần trung tâm của đánh giá an toàn chủ động \cite{euroncap_driver_engagement,euroncapsd201,euroncapsd202}. Điều này đặc biệt phù hợp với định hướng của mã nguồn hiện tại vì hệ thống đã khai thác chính những nhóm đặc trưng đó.
+
+Điểm quan trọng hơn là tinh thần của các giao thức này: hệ thống không chỉ phải phát hiện được suy giảm chú ý, mà còn phải duy trì khả năng được người dùng chấp nhận trong thực tế, đồng nghĩa với việc phải hạn chế báo động giả và tránh đưa ra cảnh báo dao động liên tục. Bối cảnh nghiên cứu của NHTSA về cảnh báo buồn ngủ và giám sát người lái cũng nhấn mạnh yêu cầu cân bằng giữa độ nhạy phát hiện và tính khả dụng thực tế của hệ thống cảnh báo. Vì vậy, các đề xuất của luận văn như FSM, hysteresis, EMA, và dung hợp Random Forest đều không chỉ có ý nghĩa thuật toán, mà còn phù hợp với triết lý đánh giá công nghiệp hiện đại.
+
+\section{Phân tích bám mã nguồn của workspace hiện tại}
+\subsection{Những điểm mạnh đã có trong mã nguồn}
+Từ góc nhìn kỹ thuật, mã nguồn hiện tại sở hữu nhiều thành phần đáng giá:
+\begin{enumerate}[label=\arabic*.]
+  \item kết hợp được hình học khuôn mặt, học sâu và logic thời gian trong cùng pipeline;
+  \item sử dụng đặc trưng tỷ số (EAR, MAR) có tính bất biến tương đối theo tỷ lệ;
+  \item có khối ước lượng tư thế đầu 3D dựa trên \path{solvePnP};
+  \item có kiến trúc CNN đa nhiệm tối ưu cho suy luận biên với input nhỏ và GAP;
+  \item đã có nhánh dung hợp cổ điển bằng \path{RandomForestClassifier};
+  \item có cơ chế hiệu chỉnh đường cơ sở của đầu tương đối trước khi phát hiện gật gù.
+\end{enumerate}
+Những thành phần này cho thấy dự án không chỉ là một demo đơn giản, mà đã chạm vào nhiều thành tố chuẩn của một hệ DMS hiện đại.
+
+\subsection{Những giới hạn khiến hệ thống vẫn ở mức nguyên mẫu}
+Tuy nhiên, các báo cáo kiểm toán của chính dự án chỉ ra rõ các khiếm khuyết khoa học cốt lõi:
+\begin{itemize}
+  \item nhãn dữ liệu vẫn mang tính gán cho toàn bộ video thay vì đồng bộ theo KSS;
+  \item nhiều ngưỡng được cài theo số frame cố định mà không chuẩn hóa theo FPS đo thực;
+  \item phát hiện ngáp hiện bị quyết định quá nhanh, dễ nhầm với phát âm hoặc cử động miệng không đặc hiệu;
+  \item phát hiện gật đầu chủ yếu dựa trên góc tĩnh và bộ đếm, chưa khai thác đạo hàm động học;
+  \item PERCLOS chưa được tích hợp như một đặc trưng bậc cao chính thức;
+  \item Random Forest mới tồn tại ở đường huấn luyện bảng, chưa được nối lại vào vòng suy luận thời gian thực;
+  \item chưa có nghiên cứu cắt bỏ, chưa có chuẩn xác thực liên chủ thể, và chưa có đánh giá mức báo động giả theo giao thức công nghiệp.
+\end{itemize}
+Vì vậy, kết luận học thuật đúng đắn không phải là ``hệ thống đã hoàn thiện'', mà là ``mã nguồn hiện tại chứa bộ khung phù hợp cho một DMS dựa trên thị giác máy tính, song vẫn cần được tái cấu trúc dựa trên chứng cứ khoa học và chuẩn đánh giá hiện đại''.
+
+\section{Đề xuất kiến trúc hoàn thiện cho phiên bản tiếp theo}
+Dựa trên mã nguồn và các tài liệu kiểm toán, có thể mô tả một lộ trình hoàn thiện hệ thống theo năm lớp.
+
+\subsection{Lớp nhãn và dữ liệu}
+\begin{enumerate}[label=\arabic*.]
+  \item thu KSS định kỳ trong quá trình ghi hình;
+  \item đồng bộ mỗi mốc KSS với cửa sổ video tương ứng;
+  \item nếu có thể, thu thêm biến phản ánh hiệu năng như PVT hoặc chỉ dấu thay thế tương đương;
+  \item tách tập train/validation/test theo chủ thể để tránh rò rỉ danh tính.
+\end{enumerate}
+
+\subsection{Lớp tín hiệu}
+\begin{enumerate}[label=\arabic*.]
+  \item chuẩn hóa toàn bộ ngưỡng thời gian theo FPS đo thực;
+  \item làm mượt EAR, MAR, pitch bằng EMA;
+  \item đưa PERCLOS, độ dài chuỗi đóng mắt, và pitch-velocity thành đặc trưng chuẩn;
+  \item hiệu chỉnh đường cơ sở theo từng người lái ở pha khởi động.
+\end{enumerate}
+
+\subsection{Lớp mô hình}
+\begin{enumerate}[label=\arabic*.]
+  \item giữ mô hình CNN nhỏ với input \(64\times64\) cho mắt;
+  \item tách riêng ROI miệng cho nhiệm vụ ngáp nếu tiếp tục duy trì kiến trúc đa nhiệm;
+  \item kết hợp đặc trưng học sâu và đặc trưng hình học vào mô hình bảng như Random Forest hoặc gradient boosting;
+  \item sử dụng độ quan trọng của đặc trưng và độ quan trọng hoán vị để giải thích đóng góp đặc trưng.
+\end{enumerate}
+
+\subsection{Lớp quyết định}
+\begin{enumerate}[label=\arabic*.]
+  \item thay luật OR trực tiếp bằng FSM nhiều cấp;
+  \item thêm hysteresis để chống rung cảnh báo;
+  \item yêu cầu đa tín hiệu hoặc bằng chứng thời gian đủ dài trước khi nâng cấp mức nguy hiểm;
+  \item tách rõ mức \textit{cảnh báo sớm} và \textit{cảnh báo nguy kịch} để phù hợp với thực tế sử dụng.
+\end{enumerate}
+
+\subsection{Lớp đánh giá}
+\begin{enumerate}[label=\arabic*.]
+  \item báo cáo confusion matrix, precision, recall, F1-score;
+  \item thực hiện ablation study cho từng mô-đun;
+  \item đánh giá riêng báo động giả trong điều kiện tỉnh táo ban ngày, ban đêm, có kính và không kính;
+  \item đối chiếu kết quả với tinh thần đánh giá của Euro NCAP và các yêu cầu chấp nhận người dùng trong DMS hiện đại.
+\end{enumerate}
+
+\section{Kết luận}
+Luận văn đã tái cấu trúc một hệ thống giám sát người lái dựa trên thị giác máy tính từ góc nhìn liên ngành giữa y sinh, thị giác máy tính, học sâu và kỹ thuật an toàn ô tô. Trên nền tảng mã nguồn hiện có, các khối chức năng như EAR, MAR, \path{cv2.solvePnP}, CNN đa nhiệm, GAP, dropout, Random Forest và logic cảnh báo cho thấy dự án đi đúng hướng của một DMS đa tín hiệu. Tuy nhiên, những thành phần đó chỉ trở thành một hệ thống có giá trị học thuật và công nghiệp khi được gắn với nhãn đúng, hằng số thời gian đúng, cơ chế dung hợp đúng và giao thức đánh giá đúng.
+
+Về mặt y khoa, luận văn đã chỉ ra rằng KSS là điểm neo chủ quan phù hợp khi được đồng bộ với dữ liệu video; đóng mắt kéo dài trên \(500\,ms\) là một ngưỡng vận hành hợp lý cho \textit{ocular lapse}; PERCLOS là chỉ số tích lũy có giá trị cao cho suy giảm cảnh giác; ngáp kéo dài trên \(4\,s\) nên được dùng như một ngưỡng bảo thủ để giảm nhầm với phát âm; và gật đầu cần được mô hình hóa như một biến cố động học chứ không phải chỉ một góc pitch tĩnh. Về mặt kỹ thuật, luận văn đã phân tích tính phù hợp của các đặc trưng tỷ số bất biến theo tỷ lệ, mô hình pose 3D dùng \path{solvePnP}, EMA, ảnh cắt \(64\times64\), học đa nhiệm với backbone dùng chung, GAP, dropout \(0.5\), và dung hợp Random Forest với trọng số được lượng hóa bằng giảm Gini.
+
+Kết luận cuối cùng là: mã nguồn hiện tại là một nguyên mẫu giàu tiềm năng và có nền kỹ thuật đủ tốt để phát triển thành một hệ thống DMS thực dụng. Tuy nhiên, để đạt mức luận văn tốt nghiệp hoàn chỉnh và có tính chuyển giao, phiên bản tiếp theo bắt buộc phải chuẩn hóa quy trình gán nhãn theo KSS, chuẩn hóa thời lượng theo FPS, tích hợp PERCLOS và các đặc trưng động học, áp dụng FSM có hysteresis, và kiểm chứng bằng confusion matrix cùng nghiên cứu cắt bỏ dưới khung tiêu chuẩn công nghiệp hiện đại.
+
+\begin{thebibliography}{99}
+\bibitem{awareness2021}
+A. W. T. Cai, J. E. Manousakis, T. Y. T. Lo, et al.,
+``I think I'm sleepy, therefore I am -- Awareness of sleepiness while driving: A systematic review,''
+\emph{Sleep Medicine Reviews}, vol. 61, Art. 101533, 2021.
+DOI: \url{https://doi.org/10.1016/j.smrv.2021.101533}.
+
+\bibitem{hussein2023}
+R. M. Hussein, F. S. Miften, and L. E. George,
+``Driver drowsiness detection methods using EEG signals: a systematic review,''
+\emph{Computer Methods in Biomechanics and Biomedical Engineering}, 2023.
+DOI: \url{https://doi.org/10.1080/10255842.2022.2112574}.
+
+\bibitem{abe2023}
+T. Abe,
+``PERCLOS-based technologies for detecting drowsiness: current evidence and future directions,''
+\emph{Sleep Advances}, vol. 4, no. 1, zpad006, 2023.
+DOI: \url{https://doi.org/10.1093/sleepadvances/zpad006}.
+
+\bibitem{review2022}
+Y. Albadawi, M. Takruri, and M. Awad,
+``A Review of Recent Developments in Driver Drowsiness Detection Systems,''
+\emph{Sensors}, vol. 22, no. 5, Art. 2069, 2022.
+DOI: \url{https://doi.org/10.3390/s22052069}.
+
+\bibitem{dong2022}
+B.-T. Dong, H.-Y. Lin, and C.-C. Chang,
+``Driver fatigue and distracted driving detection using random forest and convolutional neural network,''
+\emph{Applied Sciences}, vol. 12, no. 17, Art. 8674, 2022.
+DOI: \url{https://doi.org/10.3390/app12178674}.
+
+\bibitem{breiman2001}
+L. Breiman,
+``Random Forests,''
+\emph{Machine Learning}, vol. 45, no. 1, pp. 5--32, 2001.
+DOI: \url{https://doi.org/10.1023/A:1010933404324}.
+
+\bibitem{louppe2013}
+G. Louppe, L. Wehenkel, A. Sutera, and P. Geurts,
+``Understanding variable importances in forests of randomized trees,''
+in \emph{Advances in Neural Information Processing Systems 26 (NeurIPS 2013)}, pp. 431--439, 2013.
+Available: \url{https://proceedings.neurips.cc/paper_files/paper/2013/file/e3796ae838835da0b6f6ea37bcf8bcb7-Paper.pdf}.
+
+\bibitem{sklearnperm}
+scikit-learn developers,
+``Permutation feature importance,''
+\emph{scikit-learn documentation}, accessed 2026-03-19.
+Available: \url{https://scikit-learn.org/stable/modules/permutation_importance.html}.
+
+\bibitem{euroncap_driver_engagement}
+Euro NCAP,
+\emph{Euro NCAP Protocol -- Safe Driving -- Driver Engagement, Version 1.1}, Oct. 2025.
+Available: \url{https://www.euroncap.com/media/80821/euro-ncap-safe-driving-driver-engagement-v11.pdf}.
+
+\bibitem{euroncapsd201}
+Euro NCAP,
+\emph{SD 201: Driver Monitoring Dossier Guidance, Version 11}, 2025.
+Available: \url{https://www.euroncap.com/media/91718/sd-201-driver-monitoring-dossier-guidance-v11.pdf}.
+
+\bibitem{euroncapsd202}
+Euro NCAP,
+\emph{SD 202: Driver Monitoring Test Procedure, Version 11}, 2025.
+Available: \url{https://www.euroncap.com/media/91719/sd-202-driver-monitoring-test-procedure-v11.pdf}.
+\end{thebibliography}
+
+\end{document}

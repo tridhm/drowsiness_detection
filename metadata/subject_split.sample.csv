@@ -1,0 +1,3 @@
+subject_id,split,notes
+SAMPLE01,train,synthetic fixture subject
+SAMPLE02,test,synthetic fixture subject

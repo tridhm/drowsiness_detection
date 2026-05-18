@@ -1,0 +1,6 @@
+# Optional dependencies for legacy data-prep scripts.
+# Canonical environment target: Python 3.12.x
+# Install with: pip install -r requirements-legacy.txt
+
+-r requirements.txt
+dlib>=19.24
