@@ -1,10 +1,11 @@
 # Drowsiness Detection Architecture Guide
 
 ## High-Level Purpose
-This repository provides a modular driver drowsiness detection system with three aligned tracks:
+This repository provides a modular driver drowsiness detection system with four aligned tracks:
 1. Real-time runtime detection (`advanced_drowsiness_detection.py` -> `runtime/app.py`)
 2. Training pipelines for model artifacts (`.pth`, `.pkl`, `.csv`)
 3. Offline evaluation/labeling and merge traceability tooling
+4. Research pipeline MVP for reproducible video feature export, KSS/window alignment, baseline evaluation, and window-level Random Forest fusion
 
 The runtime is now package-based (`runtime/`) to support testability and pluggable decision engines.
 
@@ -27,6 +28,9 @@ The runtime is now package-based (`runtime/`) to support testability and pluggab
 - `runtime/engines/`: decision-engine interface and implementations
 - `runtime/alerts.py`: audio alert policy controller
 - `tools/evaluation/`: labeling/evaluation/threshold analysis scripts
+- `tools/research/`: offline research feature export, KSS alignment, baseline metrics, Random Forest window fusion
+- `metadata/`: lightweight sample CSV fixtures for KSS/window/labeled-window validation
+- `reports/`: generated research/evaluation outputs; keep out of source control unless intentionally sampled
 - `tools/merge/sync_import_archive.py`: controlled DA1/bundle asset sync + provenance manifest
 
 ### Component Documents
@@ -60,6 +64,22 @@ The runtime is now package-based (`runtime/`) to support testability and pluggab
 - `docs/merge/import_manifest.json` stores source->target + checksums + status.
 - `docs/merge/da1_bundle_integration_ledger.md` stores human-readable what/how/where.
 
+### Flow D: Offline Research Pipeline
+1. `tools/research/export_video_features.py`
+   - Consumes a local video and runtime modules.
+   - Produces `frame_features.csv` and `window_features.csv` with timestamps derived from video FPS.
+2. `tools/research/align_window_labels.py`
+   - Consumes `window_features.csv` plus a KSS-style annotation CSV.
+   - Produces `labeled_windows.csv` by matching `subject_id`, `session_id`, `video_id`, and maximum time overlap.
+3. `tools/research/evaluate_baselines.py`
+   - Consumes `labeled_windows.csv`.
+   - Produces baseline metrics/confusion matrices for PERCLOS-only, yawn-only, head-pose-only, and FSM-state rules.
+4. `tools/research/train_window_fusion_model.py`
+   - Consumes `labeled_windows.csv`.
+   - Produces Random Forest metrics, feature importance, permutation importance, and ablation CSVs.
+
+Important contract: KSS is not inferred from video. KSS labels must come from a dataset/annotation file. Current `metadata/*.sample.csv` files are fixtures for pipeline validation, not real research evidence.
+
 ## Runtime and Deployment Notes
 - Local-machine execution model (no service wrapper in repo).
 - Runtime supports config file + CLI overrides:
@@ -69,6 +89,7 @@ The runtime is now package-based (`runtime/`) to support testability and pluggab
   - `--video-path <path>`
 - GPU acceleration remains opportunistic via `torch.cuda.is_available()`.
 - Heavy datasets/media remain external and excluded from source tree.
+- Research reports under `reports/` are generated artifacts; commit source scripts and sample fixtures, not smoke-test outputs.
 
 ## How to Start
 ### Setup
@@ -102,6 +123,12 @@ The runtime is now package-based (`runtime/`) to support testability and pluggab
   - `python tools/evaluation/evaluate_mar_videos.py`
 - MAR threshold sweep analysis:
   - `python tools/evaluation/analyze_mar_thresholds.py`
+- Research pipeline smoke/export:
+  - `python tools/research/export_video_features.py --help`
+- KSS alignment / baseline / RF MVP:
+  - `python tools/research/align_window_labels.py --help`
+  - `python tools/research/evaluate_baselines.py --help`
+  - `python tools/research/train_window_fusion_model.py --help`
 
 ### Debug
 - MediaPipe checks:

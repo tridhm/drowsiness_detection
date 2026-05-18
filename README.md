@@ -18,6 +18,7 @@ Mục tiêu của README:
 - [Runtime Guides](#runtime-guides)
 - [Training Guides](#training-guides)
 - [Evaluation Guides](#evaluation-guides)
+- [Research Pipeline MVP](#research-pipeline-mvp)
 - [Configuration](#configuration)
 - [Project Structure](#project-structure)
 - [Troubleshooting](#troubleshooting)
@@ -37,6 +38,8 @@ Runtime chính đã được tách module để dễ bảo trì và dễ mở r�
 - Feature pipeline (EMA, PERCLOS, tần suất chớp mắt/ngáp)
 - Decision engine (`fsm` hoặc `legacy`)
 - Alert policy
+
+Ngoài luồng demo realtime, repo có thêm **research pipeline MVP** để chạy video offline, xuất CSV, căn chỉnh với nhãn KSS có sẵn, đánh giá baseline rule-based và thử Random Forest ở mức window thời gian. Pipeline này phục vụ đánh giá lặp lại/hàng loạt; hiện chưa được dùng để claim hiệu năng nghiên cứu nếu chưa có dataset KSS/PVT thật.
 
 ## Get Started
 ### 1) Yêu cầu tối thiểu
@@ -403,6 +406,10 @@ Lệnh help:
 Lệnh help:
 ```powershell
 .\venv\Scripts\python.exe tools\evaluation\analyze_mar_thresholds.py --help
+.\venv\Scripts\python.exe tools\research\export_video_features.py --help
+.\venv\Scripts\python.exe tools\research\align_window_labels.py --help
+.\venv\Scripts\python.exe tools\research\evaluate_baselines.py --help
+.\venv\Scripts\python.exe tools\research\train_window_fusion_model.py --help
 ```
 
 | Option | Giá trị | Mặc định | Mô tả |
@@ -413,7 +420,39 @@ Lệnh help:
 | `--threshold-end` | `float` | `0.80` | Giá trị kết thúc quét ngưỡng. |
 | `--threshold-step` | `float` | `0.025` | Bước nhảy mỗi lần quét. |
 
-### 4) One-shot kiểm tra tất cả lệnh `--help`
+### 4) Nhóm research pipeline
+Nhóm này dùng khi muốn đánh giá offline thay vì chỉ xem demo UI. Ý tưởng là chạy video một lần, lưu dữ liệu ra CSV, rồi dùng CSV đó để căn nhãn, tính metric và huấn luyện thử mô hình window-level.
+
+| Script | Input chính | Output chính | Ý nghĩa |
+| --- | --- | --- | --- |
+| `tools/research/export_video_features.py` | File video | `frame_features.csv`, `window_features.csv` | Chạy pipeline không cần UI và lưu tín hiệu theo frame/window. |
+| `tools/research/align_window_labels.py` | `window_features.csv` + annotation KSS | `labeled_windows.csv` | Ghép window với nhãn KSS có sẵn theo subject/session/video/thời gian. |
+| `tools/research/evaluate_baselines.py` | `labeled_windows.csv` | `baseline_results.csv`, `baseline_confusion_matrix.csv` | Đánh giá rule đơn giản như PERCLOS-only, yawn-only, head-pose-only, FSM-state. |
+| `tools/research/train_window_fusion_model.py` | `labeled_windows.csv` | RF metrics, feature importance, permutation importance, ablation | MVP Random Forest kết hợp nhiều feature theo window. |
+
+Lệnh help:
+```powershell
+.\venv\Scripts\python.exe tools\research\export_video_features.py --help
+.\venv\Scripts\python.exe tools\research\align_window_labels.py --help
+.\venv\Scripts\python.exe tools\research\evaluate_baselines.py --help
+.\venv\Scripts\python.exe tools\research\train_window_fusion_model.py --help
+```
+
+Smoke-test exporter với video local:
+```powershell
+.\venv\Scripts\python.exe tools\research\export_video_features.py --video-path "Video Database\0392.mp4" --subject-id S0392 --session-id current --video-id 0392 --max-frames 150 --window-seconds 10 --stride-seconds 5 --frame-csv reports\research\smoke_frame_features.csv --window-csv reports\research\smoke_window_features.csv
+```
+
+Chạy thử alignment/baseline/RF bằng fixture nhỏ có sẵn:
+```powershell
+.\venv\Scripts\python.exe tools\research\align_window_labels.py --window-csv metadata\window_features.sample.csv --annotations-csv metadata\kss_annotations.sample.csv --output-csv reports\research\labeled_windows.csv
+.\venv\Scripts\python.exe tools\research\evaluate_baselines.py --input-csv metadata\labeled_windows.sample.csv --results-csv reports\research\baseline_results.csv --confusion-csv reports\research\baseline_confusion_matrix.csv
+.\venv\Scripts\python.exe tools\research\train_window_fusion_model.py --input-csv metadata\labeled_windows.sample.csv --output-dir reports\research\rf_sample --n-estimators 25 --permutation-repeats 3
+```
+
+Lưu ý quan trọng: `align_window_labels.py` không tự sinh KSS từ video. Script này chỉ ghép window với annotation KSS đã có sẵn. Nếu chưa có dataset/annotation KSS thật, kết quả chỉ là kiểm tra pipeline bằng fixture, không phải bằng chứng hiệu năng nghiên cứu.
+
+### 5) One-shot kiểm tra tất cả lệnh `--help`
 Bạn có thể chạy một lượt để kiểm tra môi trường:
 
 ```powershell
@@ -522,6 +561,94 @@ python tools/evaluation/evaluate_mar_videos.py --dataset-path "Video Database/Ya
 python tools/evaluation/analyze_mar_thresholds.py --input-csv "tools/evaluation/metadata/mar_result/mar_result.csv" --output-csv "tools/evaluation/metadata/reports/mar_threshold_analysis.csv"
 ```
 
+## Research Pipeline MVP
+Mục tiêu của pipeline này là biến việc chạy video thành dữ liệu có thể kiểm tra lại, chạy hàng loạt và đưa vào báo cáo. Thay vì chỉ nhìn màn hình demo rồi nhận xét bằng mắt, pipeline lưu các tín hiệu ra CSV để tính metric, vẽ biểu đồ và so sánh các cách quyết định.
+
+Luồng tổng quát:
+```text
+Video có sẵn
+  -> export frame_features.csv và window_features.csv
+  -> căn chỉnh window với annotation kiểu KSS
+  -> tạo labeled_windows.csv
+  -> đánh giá baseline rule-based
+  -> train Random Forest window-fusion MVP
+  -> xuất metrics, feature importance, permutation importance, ablation results
+```
+
+### 1) Export feature từ video
+Script chính: `tools/research/export_video_features.py`.
+
+Đầu vào là một file video. Script dùng lại các module runtime hiện có (`runtime.perception`, `runtime.features`, decision engine FSM/legacy), nhưng chạy theo kiểu offline/headless để xuất CSV.
+
+`frame_features.csv`: mỗi row là một frame video.
+- Metadata: `subject_id`, `session_id`, `video_id`, `frame_index`, `timestamp_sec`.
+- Tín hiệu khuôn mặt: `face_detected`, `ear`, `mar`, `pitch`, `yaw`, `roll`.
+- Cờ trạng thái tức thời: `eye_closed`, `mouth_open`, `head_nod_detected`.
+- Feature tích lũy theo thời gian: `perclos_60s`, `perclos_5s`, `blink_frequency`, `yawn_frequency`, `pitch_velocity`, `gaze_stable`.
+- Output của decision engine: `fsm_state`, `fsm_evidence`, `fsm_reasons`.
+
+`window_features.csv`: mỗi row là một đoạn thời gian, ví dụ 10 giây hoặc 60 giây.
+- Metadata window: `subject_id`, `session_id`, `video_id`, `window_start_sec`, `window_end_sec`, `frame_count`.
+- Chất lượng dữ liệu: `valid_face_ratio` cho biết tỷ lệ frame detect được mặt.
+- Eye features: `mean_ear`, `min_ear`, `perclos_60s`, `perclos_5s`, `max_eye_closed_duration_sec`, `blink_rate_per_min`.
+- Yawn features: `mean_mar`, `max_mar`, `yawn_count`.
+- Head-pose features: `head_drop_count`, `max_pitch_velocity`.
+- FSM summary: `mean_fsm_evidence`, `max_fsm_evidence`, `fsm_state_mode`.
+
+### 2) Căn chỉnh window với annotation KSS
+Script chính: `tools/research/align_window_labels.py`.
+
+KSS là điểm tự đánh giá mức buồn ngủ theo thang Karolinska Sleepiness Scale. Script không tự đo KSS từ mặt người trong video. Nó cần file annotation có sẵn, ví dụ:
+```csv
+subject_id,session_id,video_id,start_time_sec,end_time_sec,kss_score,kss_band,notes
+S001,night,video01,0,60,7,sleepy,example segment
+```
+
+Cách ghép nhãn:
+1. Lấy từng row trong `window_features.csv`.
+2. Tìm annotation có cùng `subject_id`, `session_id`, `video_id`.
+3. So thời gian overlap giữa window và annotation.
+4. Chọn annotation overlap nhiều nhất.
+5. Ghi ra `labeled_windows.csv` với `kss_score`, `kss_band`, `label_source`.
+
+Nếu chưa có annotation KSS thật, không nên tạo nhãn giả để claim hiệu năng. Các file trong `metadata/*.sample.csv` chỉ dùng để kiểm tra code chạy đúng.
+
+Fixture hiện có: `metadata/kss_annotations.sample.csv`, `metadata/window_features.sample.csv`, `metadata/labeled_windows.sample.csv`, `metadata/subject_split.sample.csv`.
+
+### 3) Đánh giá baseline rule-based
+Script chính: `tools/research/evaluate_baselines.py`.
+
+Baseline là các luật đơn giản dùng để so sánh với mô hình học máy. Ví dụ:
+- PERCLOS-only: chỉ dựa trên tỷ lệ mắt nhắm trong một window.
+- Yawn-only: chỉ dựa trên số lần ngáp.
+- Head-pose-only: chỉ dựa trên dấu hiệu gục đầu.
+- FSM-state: dùng trạng thái cuối/tổng hợp của decision engine.
+
+Output:
+- `baseline_results.csv`: precision, recall, F1, accuracy cho từng baseline.
+- `baseline_confusion_matrix.csv`: số đúng/sai theo từng nhóm dự đoán.
+
+Ý nghĩa: nếu sau này Random Forest tốt hơn baseline trên dataset KSS thật, ta có cơ sở nói mô hình kết hợp nhiều tín hiệu có ích hơn luật đơn lẻ.
+
+### 4) Train Random Forest window-fusion MVP
+Script chính: `tools/research/train_window_fusion_model.py`.
+
+MVP này train `RandomForestClassifier` trên `labeled_windows.csv`, tức là mỗi sample là một window thời gian, không phải một frame rời rạc. Mục tiêu là học cách kết hợp eye/yawn/head-pose/FSM features để dự đoán `kss_band`.
+
+Output trong `--output-dir`:
+- `random_forest_results.csv`: metric tổng quan của mô hình.
+- `feature_importance.csv`: feature nào được Random Forest dùng nhiều theo cơ chế nội bộ của model.
+- `permutation_importance.csv`: feature nào làm metric giảm nhiều khi bị xáo trộn, thường dễ giải thích hơn feature importance thô.
+- `ablation_results.csv`: so sánh các biến thể như `full`, `eye_only`, `perclos_only`, `no_perclos`, `no_yawn`, `no_head_pose`, `no_fsm`.
+
+Mặc định script cố gắng split theo subject-disjoint: subject trong train và test không trùng nhau. Nếu dữ liệu quá nhỏ không split được, script sẽ fail rõ ràng, trừ khi dùng `--allow-random-split` cho mục đích kiểm tra kỹ thuật.
+
+### 5) Cách nói an toàn trong báo cáo
+Hiện repo chưa kèm public dataset KSS/PVT thật. Vì vậy:
+- Có thể nói: “Đã xây dựng pipeline offline để xuất feature, căn nhãn KSS, đánh giá baseline và train thử Random Forest window-level.”
+- Có thể nói: “Các fixture hiện tại xác nhận pipeline chạy được và output đúng schema.”
+- Không nên nói: “Random Forest đã chứng minh hệ thống phát hiện buồn ngủ chính xác” nếu chưa chạy trên dataset KSS/PVT thật.
+
 ## Configuration
 File cấu hình mặc định: `config.json`.
 
@@ -591,13 +718,18 @@ python extract_video_frames.py --config config_tools.json --glob "*.mp4" --recur
 │   ├── features.py                         # EMA/PERCLOS/temporal features
 │   ├── alerts.py                           # điều khiển cảnh báo âm thanh
 │   └── engines/                            # engine interface + fsm/legacy
+├── metadata/                              # sample CSV cho KSS/window/labeled fixtures
+├── reports/                               # output sinh ra khi chạy evaluation/research (ignored)
 ├── tools/
 │   ├── evaluation/                         # labeling/evaluation scripts
+│   ├── research/                           # offline feature exporter, KSS alignment, baselines, RF MVP
 │   └── merge/                              # sync archive + provenance
 ├── docs/
 │   ├── architecture/                       # tài liệu kiến trúc
 │   ├── merge/                              # ledger/manifest/verification
-│   └── reference/                          # tài liệu tham khảo
+│   ├── reference/                          # tài liệu tham khảo
+│   ├── research_pipeline_changelog.md      # changelog chi tiết pipeline nghiên cứu
+│   └── research_pipeline_slide_changelog_vi.md  # bản tóm tắt để đưa vào slide
 ├── requirements.txt                        # dependencies chính
 ├── requirements-legacy.txt                 # dependencies cho script legacy (dlib)
 ├── config_tools.json                       # config mẫu chung cho train/data scripts
@@ -655,6 +787,12 @@ python extract_video_frames.py --config config_tools.json --glob "*.mp4" --recur
 - Có thể chạy evaluation threshold với file metadata sẵn trong `tools/evaluation/metadata`.
 - Train đầy đủ cần bổ sung dataset như mục Dataset Setup.
 
+### Research pipeline khác gì demo UI?
+Demo UI dùng để nhìn hệ thống hoạt động realtime: camera/video vào, overlay/cảnh báo ra. Research pipeline dùng để đánh giá: video vào, CSV/metrics/report ra. Nhờ vậy có thể chạy nhiều video, tính precision/recall/F1, so sánh baseline và lưu kết quả để đưa vào báo cáo.
+
+### Có cần dataset có KSS không?
+Có, nếu muốn claim hiệu năng nghiên cứu thật. Exporter vẫn chạy được với video thường để tạo `frame_features.csv` và `window_features.csv`, nhưng bước label alignment cần annotation KSS có sẵn. Nếu chỉ dùng `metadata/*.sample.csv`, đó là validation kỹ thuật của pipeline, không phải kết quả nghiên cứu cuối cùng.
+
 ### Tôi muốn thử engine mới (ví dụ LSTM) thì bắt đầu ở đâu?
 1. Tạo engine mới trong `runtime/engines/`.
 2. Implement interface `DecisionEngine`.
@@ -665,6 +803,9 @@ python extract_video_frames.py --config config_tools.json --glob "*.mp4" --recur
 - [Architecture Guide](docs/architecture/Architecture_Guide.md)
 - [Modular Runtime Map](docs/architecture/modular_runtime_map.md)
 - [Codebase Visual Map](docs/architecture/Codebase_Visual_Map.md)
+- [Research Pipeline Changelog](docs/research_pipeline_changelog.md)
+- [Research Pipeline Slide Changelog VI](docs/research_pipeline_slide_changelog_vi.md)
+- [DA1 Research Roadmap VI](docs/DA1_RESEARCH_ROADMAP_VI.md)
 
 ## Merge and provenance docs
 - [Integration Ledger](docs/merge/da1_bundle_integration_ledger.md)
